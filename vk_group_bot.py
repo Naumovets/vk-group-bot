@@ -4,14 +4,22 @@ import urllib.request
 
 def main():
     # токен
-    token = 'a77ec976edae329e84b4eaaf023e96ff75dc456088a1acad8da4a646248b3c521ef5f0f1d10bbcf8b381f'
+    token = 'твой токен'
+
+    # максимальная разница во времени между опубликованным постом и настоящим временем в секундах (1 час - 3600 сек)
+    time_for_parsing = 3600
+    # время ожидания после публикации поста, чтобы постить посты с интервалами во времени
+    time_for_sleep = 3300
+    # время ожидания после неудачного парсинга группы
+    time_for_before_post = 300
 
     # список групп для парсинга
-    groups = ['hist_post', 'historymemestrue', 'historical_memes_ik', 'imperialsmeme', 'yes1488off', 'die_geschichte_fuhrers', 'armyironia', 'sieghoika']
+    groups = ['group1', 'group2', 'group3'] #vk.com/group1, vk.com/group2, vk.com/group3
 
     # id группы
     number_group = 0
 
+    # бессконечный цикл
     while True:
 
         # парсинг последнего поста в группе
@@ -29,8 +37,8 @@ def main():
                     time_now = time.time()
                     delta_time = time_now - post_date
 
-                    # если пост был опубликован не более 1800 секунд назад (30 минут)
-                    if delta_time <= 3600:
+                    # если пост был опубликован не более time_for_parsing секунд назад
+                    if delta_time <= time_for_parsing:
                         img_url = result['response']['items'][0]['attachments'][0]['photo']['sizes'][-1]['url']
                         download_photo(img_url)
                         img_url = upload_image('img.jpg', token)
@@ -38,7 +46,7 @@ def main():
                             wall_post('',token,img_url)
                         else:
                             wall_post(result['response']['items'][0]['text'],token,img_url)
-                        time.sleep(3300)
+                        time.sleep(time_for_sleep)
 
                     # проверка 2 поста в группе (на случай если есть закрепленный пост)
                     else:
@@ -58,8 +66,8 @@ def main():
                                     post_date = result['response']['items'][0]['date']
                                     time_now = time.time()
                                     delta_time = time_now - post_date
-                                    # если пост был опубликован не более 1800 секунд назад (30 минут)
-                                    if delta_time <= 3600:
+                                    # если пост был опубликован не более time_for_parsing секунд назад
+                                    if delta_time <= time_for_parsing:
                                         img_url = result['response']['items'][0]['attachments'][0]['photo']['sizes'][-1]['url']
                                         download_photo(img_url)
                                         img_url = upload_image('img.jpg', token)
@@ -67,10 +75,10 @@ def main():
                                             wall_post('', token ,img_url)
                                         else:
                                             wall_post(result['response']['items'][0]['text'], token, img_url)
-                                        time.sleep(3300)
+                                        time.sleep(time_for_sleep)
                                     else:
                                         log('vk.com/' + groups[number_group] + ' превышен лимит по времени (2) на ' + str(delta_time))
-                                        time.sleep(300)
+                                        time.sleep(time_for_before_post)
 
         # если это последний id - обнуление id
         if number_group == len(groups)-1:
@@ -91,7 +99,7 @@ def wall_post(message,token, img_url = ''):
     data={
         'access_token': token,
         'from_group': 1,
-        'owner_id':-180808101,
+        'owner_id': -id_твоей_группы,
         'message': message,
         'signed': 0,
         'attachments': img_url,
@@ -122,7 +130,7 @@ def upload_image(img, token):
                         params={
                             'access_token': token,
                             'v': version,
-                            'group_id': 180808101
+                            'group_id': id_твоей_группы
                         })
     url = server.json()['response']['upload_url']
     data = requests.post(url, files = { 'photo': open('img/'+ img,'rb')}).json()
@@ -130,7 +138,7 @@ def upload_image(img, token):
                         params={
                             'access_token': token,
                             'v': version,
-                            'group_id': 180808101,
+                            'group_id': id_твоей_группы,
                             'hash': data['hash'],
                             'server': data['server'],
                             'photo' : data['photo']
